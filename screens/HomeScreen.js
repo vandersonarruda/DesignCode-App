@@ -15,6 +15,43 @@ import Course from "../components/Course";
 import Menu from "../components/Menu";
 import Avatar from "../components/Avatar";
 import { connect } from "react-redux";
+import ApolloClient from "apollo-boost";
+import gql from "graphql-tag";
+import { Query } from "react-apollo";
+
+const CardsQuery = gql`
+  {
+    cardsCollection {
+      items {
+        title
+        subtitle
+        image {
+          title
+          description
+          contentType
+          fileName
+          size
+          url
+          width
+          height
+        }
+        subtitle
+        caption
+        logo {
+          title
+          description
+          contentType
+          fileName
+          size
+          url
+          width
+          height
+        }
+        content
+      }
+    }
+  }
+`;
 
 function mapStateToPros(state) {
   return { action: state.action, name: state.name };
@@ -119,7 +156,39 @@ class HomeScreen extends React.Component {
                 style={{ paddingBottom: 30 }}
                 showsHorizontalScrollIndicator={false}
               >
-                {cards.map((card, index) => (
+                <Query query={CardsQuery}>
+                  {({ loading, error, data }) => {
+                    if (loading) return <Message>Loading...</Message>;
+                    if (error) return <Message>Error...</Message>;
+
+                    //console.log(data.cardsCollection.items);
+
+                    return (
+                      <CardsContainers>
+                        {data.cardsCollection.items.map((card, index) => (
+                          <TouchableOpacity
+                            key={index}
+                            onPress={() => {
+                              this.props.navigation.push("Section", {
+                                section: card,
+                              });
+                            }}
+                          >
+                            <Card
+                              title={card.title}
+                              image={card.image}
+                              caption={card.caption}
+                              logo={card.logo}
+                              subtitle={card.subtitle}
+                              content={card.content}
+                            />
+                          </TouchableOpacity>
+                        ))}
+                      </CardsContainers>
+                    );
+                  }}
+                </Query>
+                {/* {cards.map((card, index) => (
                   <TouchableOpacity
                     key={index}
                     onPress={() => {
@@ -136,22 +205,25 @@ class HomeScreen extends React.Component {
                       subtitle={card.subtitle}
                     />
                   </TouchableOpacity>
-                ))}
+                ))} */}
               </ScrollView>
 
               <Subtitle>Popular Courses</Subtitle>
-              {courses.map((course, index) => (
-                <Course
-                  key={index}
-                  title={course.title}
-                  subtitle={course.subtitle}
-                  image={course.image}
-                  logo={course.logo}
-                  author={course.author}
-                  avatar={course.avatar}
-                  caption={course.caption}
-                />
-              ))}
+
+              <CoursesContainer>
+                {courses.map((course, index) => (
+                  <Course
+                    key={index}
+                    title={course.title}
+                    subtitle={course.subtitle}
+                    image={course.image}
+                    logo={course.logo}
+                    author={course.author}
+                    avatar={course.avatar}
+                    caption={course.caption}
+                  />
+                ))}
+              </CoursesContainer>
             </ScrollView>
           </SafeAreaView>
         </AnimatedContainer>
@@ -165,6 +237,12 @@ export default connect(mapStateToPros, mapDispatchToProps)(HomeScreen);
 const RootView = styled.View`
   background-color: black;
   flex: 1;
+`;
+
+const CoursesContainer = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding-left: 10px;
 `;
 
 const Subtitle = styled.Text`
@@ -203,6 +281,18 @@ const Name = styled.Text`
   font-size: 20px;
   color: #3c4560;
   font-weight: bold;
+`;
+
+const Message = styled.Text`
+  margin: 20px;
+  color: #b8bece;
+  font-size: 15px;
+  font-weight: 500;
+`;
+
+const CardsContainers = styled.View`
+  flex-direction: row;
+  padding-left: 10px;
 `;
 
 // const Avatar = styled.Image`
