@@ -55,20 +55,6 @@ export default function AppNavigation() {
           }}
         />
         <Tab.Screen
-          name="Courses"
-          component={CoursesScreen}
-          options={{
-            tabBarLabel: "Courses",
-            tabBarIcon: ({ focused }) => (
-              <Ionicons
-                name="ios-albums"
-                size={26}
-                color={focused ? activeColor : inactiveColor}
-              />
-            ),
-          }}
-        />
-        <Tab.Screen
           name="Projects"
           component={ProjectsScreen}
           options={{
@@ -76,6 +62,20 @@ export default function AppNavigation() {
             tabBarIcon: ({ focused }) => (
               <Ionicons
                 name="ios-folder"
+                size={26}
+                color={focused ? activeColor : inactiveColor}
+              />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Courses"
+          component={CoursesScreen}
+          options={{
+            tabBarLabel: "Courses",
+            tabBarIcon: ({ focused }) => (
+              <Ionicons
+                name="ios-albums"
                 size={26}
                 color={focused ? activeColor : inactiveColor}
               />

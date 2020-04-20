@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { Dimentions, Dimensions } from "react-native";
+import { Dimensions } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 
