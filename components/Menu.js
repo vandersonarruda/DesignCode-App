@@ -4,6 +4,7 @@ import { Animated, TouchableOpacity, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MenuItem from "./MenuItem";
 import { connect } from "react-redux";
+import { AsyncStorage } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 var cardWidth = screenWidth;
@@ -21,6 +22,18 @@ function mapDispatchToProps(dispatch) {
       dispatch({
         type: "CLOSE_MENU",
       }),
+    updateName: (name) => {
+      dispatch({
+        type: "UPDATE_NAME",
+        name,
+      });
+    },
+    updateAvatar: (avatar) => {
+      dispatch({
+        type: "UPDATE_AVATAR",
+        avatar,
+      });
+    },
   };
 }
 
@@ -56,6 +69,17 @@ class Menu extends React.Component {
     }
   };
 
+  handleMenu = (index) => {
+    if (index === 3) {
+      this.props.closeMenu();
+      this.props.updateName("Guest");
+      this.props.updateAvatar(
+        "https://cl.ly/55da82beb939/download/avatar-default.jpg"
+      );
+      AsyncStorage.clear();
+    }
+  };
+
   render() {
     return (
       <AnimatedContainer style={{ top: this.state.top }}>
@@ -85,12 +109,14 @@ class Menu extends React.Component {
         {/* Menu Itens */}
         <Content>
           {items.map((item, index) => (
-            <MenuItem
+            <TouchableOpacity
               key={index}
-              icon={item.icon}
-              title={item.title}
-              text={item.text}
-            />
+              onPress={() => {
+                this.handleMenu(index);
+              }}
+            >
+              <MenuItem icon={item.icon} title={item.title} text={item.text} />
+            </TouchableOpacity>
           ))}
         </Content>
       </AnimatedContainer>

@@ -4,10 +4,44 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
+  Dimensions,
+  Animated,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import Success from "../components/Success";
 import Loading from "./Loading";
+import { connect } from "react-redux";
+import firebase from "./Firebase";
+import { AsyncStorage } from "react-native";
+import { saveState } from "./AsyncStorage";
+
+function mapStateToProps(state) {
+  return { action: state.action };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    closeLogin: () =>
+      dispatch({
+        type: "CLOSE_LOGIN",
+      }),
+    updateName: (name) => {
+      dispatch({
+        type: "UPDATE_NAME",
+        name,
+      });
+    },
+    updateAvatar: (avatar) => {
+      dispatch({
+        type: "UPDATE_AVATAR",
+        avatar,
+      });
+    },
+  };
+}
+
+const screenHeight = Dimensions.get("window").height;
 
 class ModalLogin extends React.Component {
   state = {
@@ -17,18 +51,123 @@ class ModalLogin extends React.Component {
     iconPassword: require("../assets/icon-password.png"),
     isSuccessful: false,
     isLoading: false,
+    top: new Animated.Value(screenHeight),
+    scale: new Animated.Value(1.3),
+    translateY: new Animated.Value(0),
+  };
+
+  componentDidMount() {
+    this.retrieveName();
+  }
+
+  componentDidUpdate() {
+    if (this.props.action === "openLogin") {
+      Animated.timing(this.state.top, { toValue: 0, duration: 0 }).start();
+      Animated.spring(this.state.scale, { toValue: 1 }).start();
+      Animated.spring(this.state.translateY, {
+        toValue: 0,
+        duration: 0,
+      }).start();
+    }
+
+    if (this.props.action === "closeLogin") {
+      setTimeout(() => {
+        Animated.timing(this.state.top, {
+          toValue: screenHeight,
+          duration: 0,
+        }).start();
+
+        Animated.spring(this.state.scale, { toValue: 1.3 }).start();
+      }, 500);
+
+      Animated.spring(this.state.translateY, {
+        toValue: 1000,
+        duration: 500,
+      }).start();
+    }
+  }
+
+  // STORE THE DATE (AFTER FIREBASE FEEDBACK)
+  storeName = async (name) => {
+    try {
+      await AsyncStorage.setItem("name", name);
+    } catch (error) {}
+  };
+
+  retrieveName = async () => {
+    try {
+      const name = await AsyncStorage.getItem("name");
+      if (name !== null) {
+        console.log(name);
+        this.props.updateName(name);
+      }
+    } catch (error) {}
   };
 
   handleLogin = () => {
-    this.tapBackground();
-
     console.log(this.state.email, this.state.password);
 
     this.setState({ isLoading: true });
-    setTimeout(() => {
-      this.setState({ isLoading: false });
-      this.setState({ isSuccessful: true });
-    }, 2000);
+
+    // setTimeout(() => {
+    //   this.setState({ isLoading: false });
+    //     this.setState({ isSuccessful: true });
+
+    //     Alert.alert("Congrats", "You've logged successfully!");
+
+    //     setTimeout(() => {
+    //       this.props.closeLogin();
+    //       this.setState({ isSuccessful: false });
+    //     }, 1000);
+    // }, 2000);
+
+    // FIREBASE
+    const email = this.state.email;
+    const password = this.state.password;
+
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .catch(function (error) {
+        Alert.alert("Error", error.message);
+      })
+      .then((response) => {
+        //console.log(response);
+
+        this.setState({ isLoading: false });
+
+        if (response) {
+          this.setState({ isSuccessful: true });
+
+          Alert.alert("Congrats", "You've logged successfully!");
+
+          //this.storeName(response.user.email);
+          this.fetchUser();
+
+          this.props.updateName(response.user.email);
+
+          setTimeout(() => {
+            this.props.closeLogin();
+            this.setState({ isSuccessful: false });
+          }, 1000);
+        }
+      });
+  };
+
+  fetchUser = () => {
+    fetch("https://uifaces.co/api?limit=1&random", {
+      headers: {
+        "X-API-KEY": ["63158f6ecf6a157be7bdce3310b7f0"],
+      },
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        const name = response[0].name;
+        const avatar = response[0].photo;
+        saveState({ name, avatar });
+        this.updateName(name);
+        this.updateAvatar(avatar);
+      });
   };
 
   focusEmail = () => {
@@ -47,11 +186,12 @@ class ModalLogin extends React.Component {
 
   tapBackground = () => {
     Keyboard.dismiss();
+    this.props.closeLogin();
   };
 
   render() {
     return (
-      <Container>
+      <AnimatedContainer style={{ top: this.state.top }}>
         <TouchableWithoutFeedback onPress={this.tapBackground}>
           <BlurView
             tint="default"
@@ -59,7 +199,14 @@ class ModalLogin extends React.Component {
             style={{ position: "absolute", width: "100%", height: "100%" }}
           />
         </TouchableWithoutFeedback>
-        <Modal>
+        <AnimatedModal
+          style={{
+            transform: [
+              { scale: this.state.scale },
+              { translateY: this.state.translateY },
+            ],
+          }}
+        >
           <Logo source={require("../assets/logo-dc.png")} />
           <Text>Start Learning. Access Pro Content.</Text>
           <TextInput
@@ -81,15 +228,15 @@ class ModalLogin extends React.Component {
               <ButtonText>Log in</ButtonText>
             </ButtonView>
           </TouchableOpacity>
-        </Modal>
+        </AnimatedModal>
         <Success isActive={this.state.isSuccessful} />
         <Loading isActive={this.state.isLoading} />
-      </Container>
+      </AnimatedContainer>
     );
   }
 }
 
-export default ModalLogin;
+export default connect(mapStateToProps, mapDispatchToProps)(ModalLogin);
 
 const Container = styled.View`
   position: absolute;
@@ -101,6 +248,8 @@ const Container = styled.View`
   justify-content: center;
   align-items: center;
 `;
+
+const AnimatedContainer = Animated.createAnimatedComponent(Container);
 
 const TextInput = styled.TextInput`
   border: 1px solid #dbdfea;
@@ -121,6 +270,8 @@ const Modal = styled.View`
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   align-items: center;
 `;
+
+const AnimatedModal = Animated.createAnimatedComponent(Modal);
 
 const Logo = styled.Image`
   width: 44px;

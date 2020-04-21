@@ -7,6 +7,7 @@ import HomeScreen from "../screens/HomeScreen";
 import SectionScreen from "../screens/SectionScreen";
 import CoursesScreen from "../screens/CoursesScreen";
 import ProjectsScreen from "../screens/ProjectsScreen";
+import VideoScreen from "../screens/VideoScreen";
 
 const activeColor = "#4775f2";
 const inactiveColor = "#b8bece";
@@ -27,6 +28,13 @@ function HomeStackScreen() {
       <Stack.Screen
         name="Section"
         component={SectionScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Video"
+        component={VideoScreen}
         options={{
           headerShown: false,
         }}

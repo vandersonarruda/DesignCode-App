@@ -4,6 +4,7 @@ import { TouchableOpacity, StatusBar, Linking, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import Markdown from "react-native-showdown";
+import { PlayIcon } from "../components/Icons";
 
 class SectionScreen extends React.Component {
   componentDidMount() {
@@ -23,6 +24,19 @@ class SectionScreen extends React.Component {
           <StatusBar hidden />
           <Cover>
             <Image source={section.image} />
+            <PlayWrapper>
+              <TouchableOpacity
+                underlayColor="transparent"
+                onPress={() => {
+                  this.props.navigation.navigate("Video");
+                }}
+              >
+                <PlayView>
+                  <PlayIcon style={{ marginLeft: -10 }} />
+                </PlayView>
+              </TouchableOpacity>
+            </PlayWrapper>
+
             <Wrapper>
               <Logo source={section.logo} />
               <Subtitle>{section.subtitle}</Subtitle>
@@ -123,6 +137,23 @@ const htmlStyles = `
     }
 
     </style>
+`;
+
+const PlayWrapper = styled.View`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -40px;
+  margin-left: -40px;
+`;
+
+const PlayView = styled.View`
+  width: 80px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 40px;
+  justify-content: center;
+  align-items: center;
 `;
 
 const Content = styled.View`
